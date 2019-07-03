@@ -92,7 +92,7 @@ public class Main {
 		for(Card c : player1) {
 			System.out.println(c.toString());
 		}
-		System.out.println("Player2 \n");
+		System.out.println("\n Player2 \n");
 		for(Card c : player2) {
 			System.out.println(c.toString());
 		}
