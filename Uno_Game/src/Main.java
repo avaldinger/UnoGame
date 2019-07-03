@@ -96,6 +96,8 @@ public class Main {
 		for(Card c : player2) {
 			System.out.println(c.toString());
 		}
+		
+		//
 	
 
 		
