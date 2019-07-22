@@ -300,5 +300,8 @@ public class Main {
 		} 
 		return won;
 	}
-
+	
+	public static void wildBlackFour(){
+		
+	}
 }
