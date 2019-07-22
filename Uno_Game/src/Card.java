@@ -3,8 +3,8 @@
 public class Card {
 
 	
-	int value;
-	Color color;
+	private int value;
+	private Color color;
 
 	public Card(Color color, int value) {
 		 this.value = value;
