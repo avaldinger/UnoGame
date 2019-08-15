@@ -11,6 +11,11 @@ public class Card {
 		 this.color = color;
 		
 	};
+
+	public Card(int value) {
+		this.value = value;
+
+	};
 	
 	public Card() {};
 
