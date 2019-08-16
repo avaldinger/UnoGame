@@ -7,7 +7,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.Random;
 
-public class Main {
+public class Main<playerHasMove> {
 
     /*
      * Number codes for text card: 10: Skip 11: Draw two 12: Reverse 13: Wild Color
@@ -19,6 +19,7 @@ public class Main {
     static ArrayList<Card> drawn_cards = new ArrayList<>();
     public static ArrayList<Card> deck = new ArrayList<>();
     static boolean won = false;
+    static boolean playerSkipped = false;
 
     public static void main(String[] args) {
 
@@ -142,7 +143,7 @@ public class Main {
         }
         //To add the special black colored cards to the deck
         for (int i = 1; i <= 4; i++) {
-            //deck.add(new Card(Color.black, 13));
+            deck.add(new Card(Color.black, 13));
             deck.add(new Card(Color.black, 14));
 
         }
@@ -162,7 +163,7 @@ public class Main {
 
 
     //Function to put a card in each round by the specified player
-    public static void putCard(ArrayList<Card> player) {
+    public static boolean putCard(ArrayList<Card> player) {
         ArrayList<Card> toAdd = new ArrayList<>();
         ArrayList<Card> addToPlayer = new ArrayList<>();
 
@@ -170,117 +171,192 @@ public class Main {
         Card lastDrawnCard = drawn_cards.get(drawn_cards.size() - 1);
         System.out.println("Last drawn Card: " + lastDrawnCard);
 
-        if (lastDrawnCard.getColor().equals(Color.black) && lastDrawnCard.getValue() == 14) {
+
+        playerHasMove = wildBlackPlusFour(player, lastDrawnCard, playerHasMove);
+        playerHasMove = wildBlackChangeColor(player, lastDrawnCard, playerHasMove);
+        playerHasMove = drawTwoCards(player, lastDrawnCard, playerHasMove);
+        if (!playerSkipped) {
+            playerHasMove = true;
+            playerSkipped = false;
+        } else {
+            playerHasMove = skipRound(player, lastDrawnCard, playerHasMove);
+        }
+
+
+        while (playerHasMove) {
+            // System.out.println("\n" + lastDrawnCard);
+
+            Iterator<Card> it = player.iterator();
+            Card player_CurrentCards = null;
+            while (it.hasNext()) {
+                player_CurrentCards = it.next();
+                System.out.println("Actual card from player" + ": " + player_CurrentCards.toString());
+                // if the color or the number is matching
+                // player puts the card
+                if (player_CurrentCards.getColor().equals(lastDrawnCard.getColor())
+                        || player_CurrentCards.getValue() == lastDrawnCard.getValue()
+                        || player_CurrentCards.getColor().equals(Color.black)) {
+                    toAdd.add(player_CurrentCards);
+                    it.remove();
+
+                    System.out.println("Drawn cards deck: ");
+                    for (Card c : drawn_cards) {
+                        System.out.println(c.toString());
+                    }
+
+                    System.out.println("Player's cards: ");
+                    for (Card c : player) {
+                        System.out.println(c.toString());
+                    }
+                    playerHasMove = false;
+                    break;
+
+                }
+                // if player doesn't have any valid move, pulls a new card
+                else if (!it.hasNext()) {
+                    playerHasMove = false;
+                    // if Deck is empty it gets refilled before pulling a card
+                    if (deck.size() < 1) {
+                        refillDeck();
+                        addToPlayer.add(pullCard());
+                    } else {
+                        addToPlayer.add(pullCard());
+                        System.out.println("Card to be added: " + addToPlayer);
+                    }
+                }
+            }
+            drawn_cards.addAll(toAdd);
+            System.out.println("Drawn cards deck after putting one: ");
+            for (Card c : drawn_cards) {
+                System.out.println(c.toString());
+            }
+            player.addAll(addToPlayer);
+            System.out.println("Player's cards after putting/pulling one: \n");
+            for (Card c : player) {
+                System.out.println(c.toString());
+            }
+
+        }
+        return playerSkipped;
+    }
+
+
+    public static boolean checkWinner(ArrayList<Card> player) {
+        if (player.size() == 1) {
+            System.out.println("UNO!");
+        } else if (player.size() == 0) {
+            won = true;
+        }
+        return won;
+    }
+
+    public static boolean wildBlackPlusFour(ArrayList<Card> player, Card cardToCheck, boolean playerHasMove) {
+
+        if (cardToCheck.getValue() == 14) {
             for (int j = 0; j <= 3; j++) {
-                System.out.println(deck.size());
 
                 if (deck.isEmpty()) {
-                    int deckSize = deck.size();
                     refillDeck();
-                    int deckSize2 = deck.size();
                     player.add(pullCard());
                 } else {
                     player.add(pullCard());
                 }
 
-                int random = (int) (Math.random() * 10);
 
                 Random rand = new Random();
+                int random = rand.nextInt(9);
                 int cardColor = rand.nextInt(4);
                 Card newLastCard = new Card(random);
 
-                switch (cardColor){
+                switch (cardColor) {
                     case 0:
                         newLastCard.setColor(Color.blue);
-
                     case 1:
                         newLastCard.setColor(Color.green);
                     case 2:
                         newLastCard.setColor(Color.yellow);
-
                     case 3:
                         newLastCard.setColor(Color.red);
                     default:
                         //nothing
-                        }
-
-                        drawn_cards.remove(lastDrawnCard);
-                        drawn_cards.add(newLastCard);
                 }
 
-                playerHasMove = false;
+                //drawn_cards.remove(cardToCheck);
+                drawn_cards.add(newLastCard);
             }
 
-            while (playerHasMove) {
-                // System.out.println("\n" + lastDrawnCard);
-
-                Iterator<Card> it = player.iterator();
-                Card player_CurrentCards = null;
-                while (it.hasNext()) {
-                    player_CurrentCards = it.next();
-                    System.out.println("Actual card from player" + ": " + player_CurrentCards.toString());
-                    // if the color or the number is matching
-                    // player puts the card
-                    if (player_CurrentCards.getColor().equals(lastDrawnCard.getColor())
-                            || player_CurrentCards.getValue() == lastDrawnCard.getValue()
-                            || player_CurrentCards.getColor().equals(Color.black)) {
-                        toAdd.add(player_CurrentCards);
-                        it.remove();
-
-                        System.out.println("Drawn cards deck: ");
-                        for (Card c : drawn_cards) {
-                            System.out.println(c.toString());
-                        }
-
-                        System.out.println("Player's cards: ");
-                        for (Card c : player) {
-                            System.out.println(c.toString());
-                        }
-                        playerHasMove = false;
-                        break;
-
-                    }
-                    // if player doesn't have any valid move, pulls a new card
-                    else if (!it.hasNext()) {
-                        playerHasMove = false;
-                        // if Deck is empty it gets refilled before pulling a card
-                        if (deck.size() < 1) {
-                            refillDeck();
-                            addToPlayer.add(pullCard());
-                        } else {
-                            addToPlayer.add(pullCard());
-                            System.out.println("Card to be added: " + addToPlayer);
-                        }
-                    }
-                }
-                drawn_cards.addAll(toAdd);
-                System.out.println("Drawn cards deck after putting one: ");
-                for (Card c : drawn_cards) {
-                    System.out.println(c.toString());
-                }
-                player.addAll(addToPlayer);
-                System.out.println("Player's cards after putting/pulling one: \n");
-                for (Card c : player) {
-                    System.out.println(c.toString());
-                }
-
-            }
+            playerHasMove = false;
         }
-
-
-        public static boolean checkWinner (ArrayList < Card > player) {
-            if (player.size() == 1) {
-                System.out.println("UNO!");
-            } else if (player.size() == 0) {
-                ;
-                won = true;
-            }
-            return won;
-        }
-
-        public static void wildBlackFour () {
-
-        }
-
+        return playerHasMove;
 
     }
+
+    public static boolean wildBlackChangeColor(ArrayList<Card> player, Card cardToCheck, boolean playerHasMove) {
+
+        if (cardToCheck.getValue() == 13) {
+
+
+            Random rand = new Random();
+            int random = rand.nextInt(9);
+            int cardColor = rand.nextInt(4);
+            Card newLastCard = new Card(random);
+
+            switch (cardColor) {
+                case 1:
+                    newLastCard.setColor(Color.blue);
+                case 2:
+                    newLastCard.setColor(Color.green);
+                case 3:
+                    newLastCard.setColor(Color.yellow);
+                case 4:
+                    newLastCard.setColor(Color.red);
+                default:
+                    //nothing
+
+
+                    //drawn_cards.remove(cardToCheck);
+                    drawn_cards.add(newLastCard);
+
+                    playerHasMove = false;
+
+            }
+
+        }
+        return playerHasMove;
+    }
+
+
+    public static boolean drawTwoCards(ArrayList<Card> player, Card cardToCheck, boolean playerHasMove) {
+
+        if (cardToCheck.getValue() == 11) {
+            for (int j = 0; j <= 1; j++) {
+
+                if (deck.isEmpty()) {
+                    refillDeck();
+                    player.add(pullCard());
+                } else {
+                    player.add(pullCard());
+                }
+
+            }
+            playerHasMove = false;
+        }
+        return playerHasMove;
+
+    }
+
+    public static boolean skipRound(ArrayList<Card> player, Card cardToCheck, boolean playerHasMove) {
+
+        if (cardToCheck.getValue() == 10) {
+            System.out.println("You miss this round.");
+            playerHasMove = false;
+
+        }
+        return playerHasMove;
+
+    }
+}
+
+
+
+
